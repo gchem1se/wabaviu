@@ -1,0 +1,52 @@
+diciamo che la situazione è cambiata particolarmente.
+ora ho deciso di convertire la webapp fatta con frontend e backend
+in una cosa solo frontend, quindi tutta la logica sarà scritta in JS 
+e tutti i file rimangono in locale. Niente di trascendentale quindi.
+
+I requisiti sono più o meno sempre quelli, ma ora sono semplificati:
+-   fase di apertura del file 
+    -   file non ancora decrittato + chiave
+    -   file già decrittato
+    -   file .txt esportato da whatsapp
+    -   file già esportato da wabaviu
+-   fase di visione dei messaggi
+    -   deve essere la copia sputata di whatsapp web, 
+        ma migliorata nell'interfaccia, quindi devono esserci dei filtri
+        per andare a visualizzare rapidamente un giorno in particolare, 
+        per visualizzare solo i messaggi di un periodo in particolare (data/ora), 
+        la ricerca all'interno del testo con fuzzysearch magari.
+        nessuna funzionalità di modifica o cancellazione dei messaggi dal database.
+    -   devo poter anche includere nuovi messaggi presi da altri backup
+        o presi dall'esportato di whatsapp o dall'esportato di wabaviu.
+    -   devo poter esportare come esportato di wabaviu.
+    -   magari pure come screenshot o pdf.
+
+quindi okay. Ce la faremo. Vediamo un po' come andrà a finire sta storia.
+
+Mi serve intanto una libreria per leggere file dal client.
+
+#----------#
+
+sqlite:
+	intanto vanno mergeati wa.db e msgstore.db
+		io ho fatto 
+
+		sqlite3 msgstore.db
+		.output dump1.sql
+		.dump
+		.exit
+
+		sqlite3 wa.db
+		.output dump2.sql
+		.dump
+		.exit
+
+		sqlite3 finale.db
+		.read dump1.sql
+		.read dump2.sql
+		.exit
+
+poi creerei delle belle view semplificate 
+ che mi aiutino a fare cose perchè altrimenti così è na chiavica
+
+ 
