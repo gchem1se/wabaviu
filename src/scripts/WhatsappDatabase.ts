@@ -5,10 +5,12 @@ import {
   ProvidedFileIsNotBlob,
   ProvidedFileNotSQLite,
   ProvidedFileNotWASQLite,
+  NotInitializedDB
 } from "./exceptions";
 
 export class WhatsappDatabase {
   file: unknown = null;
+  has_been_initialized: boolean = false;
   db: Database | null = null;
 
   constructor(file: unknown) {
@@ -21,36 +23,25 @@ export class WhatsappDatabase {
 
     if (!(this.file instanceof Blob))
       throw new ProvidedFileIsNotBlob(typeof this.file);
-
-    let sqlite_db : Database | null;
-    try {
-      sqlite_db = await this.getSQLiteDBfromFile(this.file);
-      if (sqlite_db === null)
-        throw new FileReadingException();
-    } catch (err) {
-      if (err instanceof ProvidedFileNotSQLite) throw err;
-      if (err instanceof FileReadingException) throw err;
-      else {
-        console.error(err);
-        throw err;
-      }
-    }
+      
+    const sqlite_db = await this.getSQLiteDBfromFile(this.file);
 
     try {
       // create useful views
       sqlite_db!.exec(queries.easier_message_view_query);
       sqlite_db!.exec("SELECT * FROM easier_messages_view LIMIT 1");
       sqlite_db!.exec(queries.easier_contacts_view_query);
-      sqlite_db!.exec("SELECT * FROM easier_contacts_view LIMIT 1");     
+      sqlite_db!.exec("SELECT * FROM easier_contacts_view LIMIT 1");
       this.db = sqlite_db;
+      this.has_been_initialized = true;
     } catch (error) {
-      // if creating those views crashes, it probably was not a valid whatsapp DB
+      // if creating those views crashes, it probably was not a valid Whatsapp DB
       throw new ProvidedFileNotWASQLite((error as Error).message);
     }
   }
 
-  async getSQLiteDBfromFile(file: Blob): Promise<Database | null> {
-    /* actually reads the file and getting a DB out of it */
+  async getSQLiteDBfromFile(file: Blob) {
+    /* actually reads the file and gets a DB object out of it */
     const promise = new Promise<ArrayBuffer | string | null>(
       (resolve, reject) => {
         const reader = new FileReader();
@@ -71,19 +62,11 @@ export class WhatsappDatabase {
     if (!(buf instanceof ArrayBuffer)) {
       // promise has been rejected
       if ((buf as unknown) instanceof String)
-        throw new FileReadingException((buf as string));
-      else
-        throw new FileReadingException();
+        throw new FileReadingException(buf as string);
+      else throw new FileReadingException();
     }
 
-    try {
-      return this.getSQLiteDBfromArrBuf(buf);
-    } catch (err) {
-      if (err instanceof ProvidedFileNotSQLite)
-        throw new ProvidedFileNotSQLite();
-      else console.error(err);
-      throw err;
-    }
+    return this.getSQLiteDBfromArrBuf(buf);
   }
 
   async getSQLiteDBfromArrBuf(buf: ArrayBuffer) {
@@ -100,12 +83,13 @@ export class WhatsappDatabase {
       db.exec("SELECT * FROM sqlite_schema");
       return db;
     } catch {
-      // catch and re-throw
       throw new ProvidedFileNotSQLite();
     }
   }
 
   getSomeMessages(contact: string): Array<ParamsObject> {
+    if (!this.has_been_initialized)
+      throw new NotInitializedDB();
     const return_val: Array<ParamsObject> = [];
     const stmt = this.db!.prepare(queries.get_some_messages);
     stmt.bind({ ":from_who": contact });

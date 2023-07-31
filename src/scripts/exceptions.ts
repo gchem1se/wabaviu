@@ -42,3 +42,11 @@ export class WASQLiteExecutionError extends WADBexception {
     this.name = "WASQLiteError";
   }
 }
+
+export class NotInitializedDB extends WADBexception {
+  constructor() {
+    super("Run await <db>.init() before trying to run any query!");
+    this.name = "NotInitializedDB";
+  }
+}
+
