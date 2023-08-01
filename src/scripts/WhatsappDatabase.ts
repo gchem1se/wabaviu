@@ -5,7 +5,7 @@ import {
   ProvidedFileIsNotBlob,
   ProvidedFileNotSQLite,
   ProvidedFileNotWASQLite,
-  NotInitializedDB
+  NotInitializedDB,
 } from "./exceptions";
 
 export class WhatsappDatabase {
@@ -23,19 +23,23 @@ export class WhatsappDatabase {
 
     if (!(this.file instanceof Blob))
       throw new ProvidedFileIsNotBlob(typeof this.file);
-      
+
     const sqlite_db = await this.getSQLiteDBfromFile(this.file);
 
     try {
-      // create useful views
-      sqlite_db!.exec(queries.easier_message_view_query);
+      // create useful views and indexes
+      sqlite_db!.exec(queries.create_useful_indexes);
+      sqlite_db!.exec(queries.easier_messages_view_query);
       sqlite_db!.exec("SELECT * FROM easier_messages_view LIMIT 1");
       sqlite_db!.exec(queries.easier_contacts_view_query);
+      console.log("creare ho creato")
       sqlite_db!.exec("SELECT * FROM easier_contacts_view LIMIT 1");
+      console.log("test fatto")
+
       this.db = sqlite_db;
       this.has_been_initialized = true;
     } catch (error) {
-      // if creating those views crashes, it probably was not a valid Whatsapp DB
+      // an error in these queries probably means the DB has not the tables of a Whatsapp valid database
       throw new ProvidedFileNotWASQLite((error as Error).message);
     }
   }
@@ -88,12 +92,30 @@ export class WhatsappDatabase {
   }
 
   getSomeMessages(contact: string): Array<ParamsObject> {
-    if (!this.has_been_initialized)
-      throw new NotInitializedDB();
+    console.log("lancio query messaggi")
+
+    if (!this.has_been_initialized) throw new NotInitializedDB();
     const return_val: Array<ParamsObject> = [];
     const stmt = this.db!.prepare(queries.get_some_messages);
     stmt.bind({ ":from_who": contact });
     while (stmt.step()) return_val.push(stmt.getAsObject());
+    console.log("finita query messaggi")
+   
+    return return_val;
+  }
+
+  getChats(): Array<ParamsObject> {
+    console.log("inizio query chats")
+    
+    if (!this.has_been_initialized) throw new NotInitializedDB();
+    const return_val: Array<ParamsObject> = [];
+    const stmt = this.db!.prepare(queries.get_all_chats);
+    while (stmt.step()) {
+      return_val.push(stmt.getAsObject());
+    }
+
+    console.log("finita query chats")
+  
     return return_val;
   }
 }
