@@ -57,7 +57,7 @@ const MainContainer = () => {
         status: (row.from_me as number) === 1 ? "sent" : "",
         notch: true,
         retracted: false,
-        type: row.message_type as string !== "video" ? row.message_type as string : "text",
+        type: row.message_type as string !== "video" ? row.message_type as string : "text", // TODO: video makes rce crash
       } as MessageType;
     });
   };
