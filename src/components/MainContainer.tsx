@@ -80,8 +80,8 @@ const MainContainer = () => {
     <div className="w-full flex justify-center text-gray-900">
       <div className="min-w-full min-h-screen max-h-screen p-10 pl-20 pe-20 bg-slate-800">
         <div className="min-w-full min-h-full max-h-full flex shadow-2xl rounded-xl">
-          <aside className="w-3/12 bg-white overflow-scroll rounded-l-xl">
-            <div className="p-10 flex justify-center items-center">
+          <aside className="w-3/12 rounded-l-xl bg-white max-h-full overflow-hidden">
+            <div className="p-6 flex justify-center items-center sticky top-0 z-10 bg-white rounded-tl-xl">
               <FileForm
                 ref={refToInput}
                 onChange={async () => {
@@ -101,13 +101,15 @@ const MainContainer = () => {
                 }}
               />
             </div>
-            <ChatList id="chats" dataSource={stato.chats} onClick={async (event) => {
-              setStato({ chats: stato.chats, messages: await getSomeMessagesToTest(event.title!) })
-            }} />
+            <div className="overflow-scroll max-h-full">
+              <ChatList className="max-h-full overflow-scroll" id="chats" lazyLoadingImage={"idonnou"} dataSource={stato.chats} onClick={async (event) => {
+                setStato({ chats: stato.chats, messages: await getSomeMessagesToTest(event.title!) })
+              }} /></div>
           </aside>
-          <main className="w-9/12 bg-gray-200 max-h-screen overflow-scroll rounded-e-xl">
+          <main className="flex flex-col w-9/12 bg-gray-200 max-h-screen overflow-scroll rounded-e-xl">
+            <div className="p-6 bg-white sticky top-0 z-10">filters zone</div>
             <MessageList
-              className="message-list"
+              className="message-list p-10 pe-3 pl-3"
               lockable={true}
               toBottomHeight={"100%"}
               dataSource={stato.messages}
